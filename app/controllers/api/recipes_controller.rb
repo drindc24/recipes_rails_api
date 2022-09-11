@@ -12,15 +12,7 @@ class Api::RecipesController < Api::BaseController
   def update
     @recipe = Recipe.find_by(id: params[:id])
 
-    request = {}
-    request.merge!('title' => params.dig(:recipes, :title))
-    request.merge!('descriptions' => params.dig(:recipes, :descriptions))
-    request.merge!('time' => params.dig(:recipes, :time))
-    request.merge!('difficulty' => params.dig(:recipes, :difficulty))
-    request.merge!('category_id' => params.dig(:recipes, :category_id))
-    request.merge!('user_id' => params.dig(:recipes, :user_id))
-
-    @error_object = @recipe.errors.messages unless @recipe.update(request)
+    @error_object = @recipe.errors.messages unless @recipe.update(recipe_params)
   end
 
   def show
@@ -29,30 +21,20 @@ class Api::RecipesController < Api::BaseController
   end
 
   def create
-    @recipe = Recipe.new
+    @recipe = Recipe.new(recipe_params)
 
-    request = {}
-    request.merge!('title' => params.dig(:recipes, :title))
-    request.merge!('descriptions' => params.dig(:recipes, :descriptions))
-    request.merge!('time' => params.dig(:recipes, :time))
-    request.merge!('difficulty' => params.dig(:recipes, :difficulty))
-    request.merge!('category_id' => params.dig(:recipes, :category_id))
-    request.merge!('user_id' => params.dig(:recipes, :user_id))
-
-    @recipe.assign_attributes(request)
     @error_object = @recipe.errors.messages unless @recipe.save
   end
 
   def index
-    request = {}
-
-    request.merge!('title' => params.dig(:recipes, :title))
-    request.merge!('descriptions' => params.dig(:recipes, :descriptions))
-    request.merge!('time' => params.dig(:recipes, :time))
-    request.merge!('difficulty' => params.dig(:recipes, :difficulty))
-    request.merge!('category_id' => params.dig(:recipes, :category_id))
-    request.merge!('user_id' => params.dig(:recipes, :user_id))
-
     @recipes = Recipe.all
+  end
+
+  private
+
+  def recipe_params
+    params.require(:recipe).permit(
+      :title, :descriptions, :time, :difficulty, :category_id, :user_id
+    )
   end
 end

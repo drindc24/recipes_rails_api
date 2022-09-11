@@ -88,7 +88,7 @@ RSpec.describe 'api/recipes', type: :request do
       parameter name: :params, in: :body, schema: {
         type: :object,
         properties: {
-          recipes: {
+          recipe: {
             type: :object,
             properties: {
               title: {
@@ -176,7 +176,14 @@ RSpec.describe 'api/recipes', type: :request do
         let(:Authorization) { "Bearer #{token}" }
         let(:id) { create(:recipe).id }
 
-        let(:params) {}
+        let(:params) do
+          {
+            recipe: {
+              title: 'Updated Title'
+            }
+          }
+        end
+          
         run_test! do |response|
           expect(response.status).to eq(200)
         end
@@ -344,7 +351,16 @@ RSpec.describe 'api/recipes', type: :request do
           'error_object' => {}
 
         }
-        let(:params) {}
+        let(:params) do
+          {
+            recipe: {
+              title: 'Sample Recipe',
+              descriptions: 'This is a sample recipe!',
+              time: '60 seconds',
+              difficulty: 'normal'
+            }
+          }
+        end
         run_test! do |response|
           expect(response.status).to eq(200)
         end
