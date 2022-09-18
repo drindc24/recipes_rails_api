@@ -5,7 +5,8 @@ RSpec.describe User, type: :model do
     build(:user)
   end
 
-  describe 'Assocations' do
+  describe 'Associations' do
+    it { is_expected.to have_many(:ratings) }
     it { is_expected.to have_many(:recipes) }
   end
 

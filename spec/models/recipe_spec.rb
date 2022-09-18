@@ -7,6 +7,7 @@ RSpec.describe Recipe, type: :model do
 
   describe 'Assocations' do
     it { is_expected.to have_many(:ingredients) }
+    it { is_expected.to have_many(:ratings) }
 
     it { is_expected.to belong_to(:category) }
 
