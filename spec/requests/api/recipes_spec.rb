@@ -1,6 +1,8 @@
 require 'swagger_helper'
 
 RSpec.describe 'api/recipes', type: :request do
+  let(:json_response){ JSON.parse response.body }
+
   before do
     create(:recipe)
   end
@@ -129,46 +131,28 @@ RSpec.describe 'api/recipes', type: :request do
         examples 'application/json' => {
           'recipes' => {
             'id' => 'integer',
-
             'created_at' => 'datetime',
-
             'updated_at' => 'datetime',
-
             'title' => 'string',
-
             'descriptions' => 'text',
-
             'time' => 'string',
-
             'difficulty' => 'enum_type',
-
             'category_id' => 'foreign_key',
-
             'ingredients' =>
-  [
-    {
+              [
+                {
+                  'id' => 'integer',
+                  'created_at' => 'datetime',
+                  'updated_at' => 'datetime',
+                  'unit' => 'enum_type',
+                  'amount' => 'float',
+                  'recipe_id' => 'foreign_key'
 
-      'id' => 'integer',
-
-      'created_at' => 'datetime',
-
-      'updated_at' => 'datetime',
-
-      'unit' => 'enum_type',
-
-      'amount' => 'float',
-
-      'recipe_id' => 'foreign_key'
-
-    }
-  ],
-
+                }
+              ],
             'user_id' => 'foreign_key'
-
           },
-
           'error_object' => {}
-
         }
 
         let(:resource_owner) { create(:user) }
@@ -368,118 +352,103 @@ RSpec.describe 'api/recipes', type: :request do
     end
   end
 
-  path '/api/recipes' do
+  path '/api/recipes?{search}' do
     get 'List recipes' do
       tags 'filter'
       consumes 'application/json'
 
       security [bearerAuth: []]
-      parameter name: :params, in: :body, schema: {
-        type: :object,
-        properties: {
-          recipes: {
-            type: :object,
-            properties: {
-              title: {
-                type: :string,
-                example: 'string'
-              },
+      parameter name: :search, in: :path, type: :string
 
-              descriptions: {
-                type: :text,
-                example: 'text'
-              },
-
-              time: {
-                type: :string,
-                example: 'string'
-              },
-
-              difficulty: {
-                type: :enum_type,
-                example: 'enum_type'
-              },
-
-              category_id: {
-                type: :foreign_key,
-                example: 'foreign_key'
-              },
-
-              user_id: {
-                type: :foreign_key,
-                example: 'foreign_key'
-              }
-
-            }
-          },
-          pagination_page: {
-            type: :pagination_page,
-            example: 'pagination_page'
-          },
-          pagination_limit: {
-            type: :pagination_limit,
-            example: 'pagination_limit'
-          }
-        }
-      }
-      response '200', 'filter' do
+      let(:resource_owner) { create(:user) }
+      let(:token) { create(:access_token, resource_owner: resource_owner).token }
+      let(:Authorization) { "Bearer #{token}" }
+      let(:search) { CGI.unescape(search_params.to_query) }
+      let(:search_params) { {} }
+      response '200', 'no filter' do
         examples 'application/json' => {
           'total_pages' => 'integer',
-
           'recipes' =>
         [
           {
-
             'id' => 'integer',
-
             'created_at' => 'datetime',
-
             'updated_at' => 'datetime',
-
             'title' => 'string',
-
             'descriptions' => 'text',
-
             'time' => 'string',
-
             'difficulty' => 'enum_type',
-
             'category_id' => 'foreign_key',
-
             'ingredients' =>
         [
           {
-
             'id' => 'integer',
-
             'created_at' => 'datetime',
-
             'updated_at' => 'datetime',
-
             'unit' => 'enum_type',
-
             'amount' => 'float',
-
             'recipe_id' => 'foreign_key'
-
           }
         ],
-
+  
             'user_id' => 'foreign_key'
-
+  
           }
         ],
-
           'error_message' => 'string'
-
         }
 
-        let(:resource_owner) { create(:user) }
-        let(:token) { create(:access_token, resource_owner: resource_owner).token }
-        let(:Authorization) { "Bearer #{token}" }
-        let(:params) {}
         run_test! do |response|
           expect(response.status).to eq(200)
+        end
+      end
+
+      response '200', 'search by title' do
+        examples 'application/json' => {
+          'total_pages' => 'integer',
+          'recipes' =>
+        [
+          {
+            'id' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'title' => 'string',
+            'descriptions' => 'text',
+            'time' => 'string',
+            'difficulty' => 'enum_type',
+            'category_id' => 'foreign_key',
+            'ingredients' =>
+        [
+          {
+            'id' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'unit' => 'enum_type',
+            'amount' => 'float',
+            'recipe_id' => 'foreign_key'
+          }
+        ],
+  
+            'user_id' => 'foreign_key'
+  
+          }
+        ],
+          'error_message' => 'string'
+        }
+
+        let(:search_params) do
+          {
+            search: { title_cont: 'adobo' }
+          }
+        end
+        let!(:recipe_1) { create(:recipe, title: 'Pork Adobo') }
+        let!(:recipe_2) { create(:recipe, title: 'Chicken Adobo') }
+        let!(:recipe_3) { create(:recipe, title: 'Tinola') }
+
+        run_test! do |response|
+          expect(response.status).to eq(200)
+          expect(json_response['recipes'].count).to eq 2
+          expect(json_response['recipes'].map{|recipe| recipe['title']}).to contain_exactly('Pork Adobo', 'Chicken Adobo')
         end
       end
     end

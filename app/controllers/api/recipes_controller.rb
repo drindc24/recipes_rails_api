@@ -27,7 +27,7 @@ class Api::RecipesController < Api::BaseController
   end
 
   def index
-    @recipes = Recipe.all
+    @recipes = Recipe.ransack(params[:search]).result
   end
 
   private
