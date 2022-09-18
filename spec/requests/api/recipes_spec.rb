@@ -499,6 +499,55 @@ RSpec.describe 'api/recipes', type: :request do
           expect(json_response['recipes'].map{|recipe| recipe['title']}).to contain_exactly('Pork Sisig')
         end
       end
+
+      response '200', 'filter by difficulty' do
+        examples 'application/json' => {
+          'total_pages' => 'integer',
+          'recipes' =>
+        [
+          {
+            'id' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'title' => 'string',
+            'descriptions' => 'text',
+            'time' => 'string',
+            'difficulty' => 'enum_type',
+            'category_id' => 'foreign_key',
+            'ingredients' =>
+        [
+          {
+            'id' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'unit' => 'enum_type',
+            'amount' => 'float',
+            'recipe_id' => 'foreign_key'
+          }
+        ],
+  
+            'user_id' => 'foreign_key'
+  
+          }
+        ],
+          'error_message' => 'string'
+        }
+
+        let(:search_params) do
+          {
+            search: { difficulty_eq: '2' }
+          }
+        end
+        let!(:recipe_1) { create(:recipe, title: 'Pork Adobo') }
+        let!(:recipe_2) { create(:recipe, title: 'Chicken Adobo') }
+        let!(:recipe_3) { create(:recipe, title: 'Tinola') }
+
+        run_test! do |response|
+          expect(response.status).to eq(200)
+          expect(json_response['recipes'].count).to eq 1
+          expect(json_response['recipes'].map{|recipe| recipe['title']}).to contain_exactly('Pork Sisig')
+        end
+      end
     end
   end
 end
